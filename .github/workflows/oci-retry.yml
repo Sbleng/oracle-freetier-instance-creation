@@ -1,0 +1,51 @@
+name: OCI ARM Instance Retry
+
+on:
+  schedule:
+    - cron: '*/20 * * * *'
+  workflow_dispatch:
+
+jobs:
+  create-instance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install oci paramiko python-dotenv requests
+
+      - name: Write OCI config and key
+        run: |
+          mkdir -p ~/.oci
+          echo "${{ secrets.OCI_CONFIG_FILE }}" > ~/.oci/config
+          echo "${{ secrets.OCI_PRIVATE_KEY }}" > ~/.oci/private_key.pem
+          chmod 600 ~/.oci/private_key.pem
+          chmod 600 ~/.oci/config
+          sed -i 's|key_file=.*|key_file=/root/.oci/private_key.pem|' ~/.oci/config
+
+      - name: Create oci.env
+        run: |
+          cat > oci.env << ENVEOF
+          OCI_CONFIG=/root/.oci/config
+          OCI_SUBNET_ID=${{ secrets.OCI_SUBNET_ID }}
+          OCI_IMAGE_ID=${{ secrets.OCI_IMAGE_ID }}
+          OCT_FREE_AD=${{ secrets.OCT_FREE_AD }}
+          OCI_COMPUTE_SHAPE=VM.Standard.A1.Flex
+          OCPUS=4
+          MEMORY_IN_GBS=24
+          BOOT_VOLUME_SIZE=${{ secrets.BOOT_VOLUME_SIZE }}
+          DISPLAY_NAME=${{ secrets.DISPLAY_NAME }}
+          REQUEST_WAIT_TIME_SECS=10
+          SSH_AUTHORIZED_KEYS_FILE=/tmp/ssh_key.pub
+          ASSIGN_PUBLIC_IP=true
+          ENVEOF
+          echo "${{ secrets.SSH_PUBLIC_KEY }}" > /tmp/ssh_key.pub
+
+      - name: Run instance creation script
+        run: python3 main.py
+        timeout-minutes: 15
