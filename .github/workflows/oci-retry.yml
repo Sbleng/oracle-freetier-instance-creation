@@ -8,6 +8,7 @@ on:
 jobs:
   create-instance:
     runs-on: ubuntu-latest
+    timeout-minutes: 19
     steps:
       - uses: actions/checkout@v4
 
@@ -57,4 +58,4 @@ jobs:
 
       - name: Run instance creation script
         run: python3 main.py
-        timeout-minutes: 15
+        timeout-minutes: 18
