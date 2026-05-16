@@ -54,6 +54,8 @@ jobs:
           REQUEST_WAIT_TIME_SECS=10
           SSH_AUTHORIZED_KEYS_FILE=${{ github.workspace }}/ssh_public_key.pub
           ASSIGN_PUBLIC_IP=true
+          TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_USER_ID=${{ secrets.TELEGRAM_USER_ID }}
           ENVEOF
 
       - name: Run instance creation script
