@@ -21,12 +21,18 @@ jobs:
 
       - name: Write OCI config and key
         run: |
-          mkdir -p ~/.oci
-          echo "${{ secrets.OCI_CONFIG_FILE }}" > ~/.oci/config
-          echo "${{ secrets.OCI_PRIVATE_KEY }}" > ~/.oci/private_key.pem
-          chmod 600 ~/.oci/private_key.pem
-          chmod 600 ~/.oci/config
-          sed -i 's|key_file=.*|key_file=/root/.oci/private_key.pem|' ~/.oci/config
+          mkdir -p /root/.oci
+          cat > /root/.oci/config << CONFIGEOF
+          [DEFAULT]
+          user=${{ secrets.OCI_USER_ID }}
+          tenancy=${{ secrets.OCI_TENANCY_ID }}
+          region=eu-turin-1
+          fingerprint=${{ secrets.OCI_FINGERPRINT }}
+          key_file=/root/.oci/private_key.pem
+          CONFIGEOF
+          echo "${{ secrets.OCI_PRIVATE_KEY }}" > /root/.oci/private_key.pem
+          chmod 600 /root/.oci/private_key.pem
+          chmod 600 /root/.oci/config
 
       - name: Create oci.env
         run: |
