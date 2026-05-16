@@ -19,38 +19,41 @@ jobs:
       - name: Install dependencies
         run: pip install oci paramiko python-dotenv requests
 
-      - name: Write OCI config and key
+      - name: Write OCI private key
         run: |
-          mkdir -p $HOME/.oci
-          cat > $HOME/.oci/config << CONFIGEOF
+          echo "${{ secrets.OCI_PRIVATE_KEY }}" > oci_api_private_key.pem
+          chmod 600 oci_api_private_key.pem
+
+      - name: Write OCI config
+        run: |
+          cat > oci_config << CONFIGEOF
           [DEFAULT]
           user=${{ secrets.OCI_USER_ID }}
           tenancy=${{ secrets.OCI_TENANCY_ID }}
           region=eu-turin-1
           fingerprint=${{ secrets.OCI_FINGERPRINT }}
-          key_file=$HOME/.oci/private_key.pem
+          key_file=${{ github.workspace }}/oci_api_private_key.pem
           CONFIGEOF
-          echo "${{ secrets.OCI_PRIVATE_KEY }}" > $HOME/.oci/private_key.pem
-          chmod 600 $HOME/.oci/private_key.pem
-          chmod 600 $HOME/.oci/config
 
-      - name: Create oci.env
+      - name: Write SSH public key
+        run: echo "${{ secrets.SSH_PUBLIC_KEY }}" > ssh_public_key.pub
+
+      - name: Write oci.env
         run: |
           cat > oci.env << ENVEOF
-          OCI_CONFIG=$HOME/.oci/config
+          OCI_CONFIG=${{ github.workspace }}/oci_config
           OCI_SUBNET_ID=${{ secrets.OCI_SUBNET_ID }}
           OCI_IMAGE_ID=${{ secrets.OCI_IMAGE_ID }}
           OCT_FREE_AD=${{ secrets.OCT_FREE_AD }}
           OCI_COMPUTE_SHAPE=VM.Standard.A1.Flex
           OCPUS=4
           MEMORY_IN_GBS=24
-          BOOT_VOLUME_SIZE=${{ secrets.BOOT_VOLUME_SIZE }}
-          DISPLAY_NAME=${{ secrets.DISPLAY_NAME }}
+          BOOT_VOLUME_SIZE=200
+          DISPLAY_NAME=IOX-NEXUS
           REQUEST_WAIT_TIME_SECS=10
-          SSH_AUTHORIZED_KEYS_FILE=$HOME/ssh_key.pub
+          SSH_AUTHORIZED_KEYS_FILE=${{ github.workspace }}/ssh_public_key.pub
           ASSIGN_PUBLIC_IP=true
           ENVEOF
-          echo "${{ secrets.SSH_PUBLIC_KEY }}" > $HOME/ssh_key.pub
 
       - name: Run instance creation script
         run: python3 main.py
