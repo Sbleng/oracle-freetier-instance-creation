@@ -58,6 +58,22 @@ jobs:
           TELEGRAM_USER_ID=${{ secrets.TELEGRAM_USER_ID }}
           ENVEOF
 
+      - name: Notify start
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage"             -d chat_id="${{ secrets.TELEGRAM_USER_ID }}"             -d text="🔄 NEXUS — Tentativo in corso...%0ATorino EU: verifica disponibilità ARM%0A⏰ $(date '+%H:%M:%S')"
+
       - name: Run instance creation script
+        id: run_script
         run: python3 main.py
         timeout-minutes: 18
+        continue-on-error: true
+
+      - name: Notify success
+        if: steps.run_script.outcome == 'success'
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage"             -d chat_id="${{ secrets.TELEGRAM_USER_ID }}"             -d text="✅ NEXUS — VM CREATA0A🎉 IOX-NEXUS è online su Oracle Cloud%0AAccedi alla console Oracle per trovare l'IP pubblico."
+
+      - name: Notify failure
+        if: steps.run_script.outcome == 'failure'
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage"             -d chat_id="${{ secrets.TELEGRAM_USER_ID }}"             -d text="⏳ NEXUS — Torino ancora esaurita%0ANessuna risorsa ARM disponibile%0A🔁 Riprovo tra 20 minuti%0A⏰ $(date '+%H:%M:%S')"
