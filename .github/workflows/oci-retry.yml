@@ -21,23 +21,23 @@ jobs:
 
       - name: Write OCI config and key
         run: |
-          mkdir -p /root/.oci
-          cat > /root/.oci/config << CONFIGEOF
+          mkdir -p $HOME/.oci
+          cat > $HOME/.oci/config << CONFIGEOF
           [DEFAULT]
           user=${{ secrets.OCI_USER_ID }}
           tenancy=${{ secrets.OCI_TENANCY_ID }}
           region=eu-turin-1
           fingerprint=${{ secrets.OCI_FINGERPRINT }}
-          key_file=/root/.oci/private_key.pem
+          key_file=$HOME/.oci/private_key.pem
           CONFIGEOF
-          echo "${{ secrets.OCI_PRIVATE_KEY }}" > /root/.oci/private_key.pem
-          chmod 600 /root/.oci/private_key.pem
-          chmod 600 /root/.oci/config
+          echo "${{ secrets.OCI_PRIVATE_KEY }}" > $HOME/.oci/private_key.pem
+          chmod 600 $HOME/.oci/private_key.pem
+          chmod 600 $HOME/.oci/config
 
       - name: Create oci.env
         run: |
           cat > oci.env << ENVEOF
-          OCI_CONFIG=/root/.oci/config
+          OCI_CONFIG=$HOME/.oci/config
           OCI_SUBNET_ID=${{ secrets.OCI_SUBNET_ID }}
           OCI_IMAGE_ID=${{ secrets.OCI_IMAGE_ID }}
           OCT_FREE_AD=${{ secrets.OCT_FREE_AD }}
@@ -47,10 +47,10 @@ jobs:
           BOOT_VOLUME_SIZE=${{ secrets.BOOT_VOLUME_SIZE }}
           DISPLAY_NAME=${{ secrets.DISPLAY_NAME }}
           REQUEST_WAIT_TIME_SECS=10
-          SSH_AUTHORIZED_KEYS_FILE=/tmp/ssh_key.pub
+          SSH_AUTHORIZED_KEYS_FILE=$HOME/ssh_key.pub
           ASSIGN_PUBLIC_IP=true
           ENVEOF
-          echo "${{ secrets.SSH_PUBLIC_KEY }}" > /tmp/ssh_key.pub
+          echo "${{ secrets.SSH_PUBLIC_KEY }}" > $HOME/ssh_key.pub
 
       - name: Run instance creation script
         run: python3 main.py
